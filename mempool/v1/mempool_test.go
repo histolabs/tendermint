@@ -13,7 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/abci/example/code"
@@ -22,7 +21,6 @@ import (
 	"github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/mempool"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/types"
 )
@@ -653,31 +651,6 @@ func TestTxMempool_CheckTxPostCheckError(t *testing.T) {
 			require.NoError(t, txmp.CheckTx(tx, callback, mempool.TxInfo{SenderID: 0}))
 		})
 	}
-}
-
-func TestRemoveBlobTx(t *testing.T) {
-	txmp := setup(t, 500)
-
-	originalTx := []byte{1, 2, 3, 4}
-	indexWrapper, err := types.MarshalIndexWrapper(100, originalTx)
-	require.NoError(t, err)
-
-	// create the blobTx
-	b := tmproto.Blob{
-		NamespaceId:  []byte{1, 2, 3, 4, 5, 6, 7, 8},
-		Data:         []byte{1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 9},
-		ShareVersion: 0,
-	}
-	bTx, err := types.MarshalBlobTx(originalTx, &b)
-	require.NoError(t, err)
-
-	err = txmp.CheckTx(bTx, nil, mempool.TxInfo{})
-	require.NoError(t, err)
-
-	err = txmp.Update(1, []types.Tx{indexWrapper}, abciResponses(1, abci.CodeTypeOK), nil, nil)
-	require.NoError(t, err)
-	assert.EqualValues(t, 0, txmp.Size())
-	assert.EqualValues(t, 0, txmp.SizeBytes())
 }
 
 func abciResponses(n int, code uint32) []*abci.ResponseDeliverTx {

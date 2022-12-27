@@ -65,35 +65,6 @@ func TestTxIndex(t *testing.T) {
 	assert.True(t, proto.Equal(txResult2, loadedTxResult2))
 }
 
-func TestWrappedTxIndex(t *testing.T) {
-	indexer := NewTxIndex(db.NewMemDB())
-
-	tx := types.Tx("HELLO WORLD")
-	wrappedTx, err := types.MarshalIndexWrapper(11, tx)
-	require.NoError(t, err)
-	txResult := &abci.TxResult{
-		Height: 1,
-		Index:  0,
-		Tx:     wrappedTx,
-		Result: abci.ResponseDeliverTx{
-			Data: []byte{0},
-			Code: abci.CodeTypeOK, Log: "", Events: nil,
-		},
-	}
-	hash := tx.Hash()
-
-	batch := txindex.NewBatch(1)
-	if err := batch.Add(txResult); err != nil {
-		t.Error(err)
-	}
-	err = indexer.AddBatch(batch)
-	require.NoError(t, err)
-
-	loadedTxResult, err := indexer.Get(hash)
-	require.NoError(t, err)
-	assert.True(t, proto.Equal(txResult, loadedTxResult))
-}
-
 func TestTxSearch(t *testing.T) {
 	indexer := NewTxIndex(db.NewMemDB())
 
